@@ -1,0 +1,31 @@
+The /var/log directory contains logs for every major system activity. auth.log records all login attempts and sudo commands — critical for security auditing. ufw.log tracks firewall activity. syslog captures general system events. Each service also creates its own log directory, such as /var/log/nginx/ for the web server.
+
+/etc/shadow has permissions 640 (-rw-r-----): only root can read/write it, and the shadow group can read it. It stores hashed passwords, so strict restrictions prevent any regular user from accessing it. /etc/passwd has permissions 644 (-rw-r--r--): world-readable because programs need to look up usernames, but it no longer contains actual passwords — those were moved to shadow specifically because passwd was too open.
+
+Section 2 - File Permissions: Used chmod to apply appropriate permissions to three files. 644 for a standard file (owner writes, others read), 600 for a private file (owner only), and 755 for a script (executable by all, writable only by owner). Permissions should match the purpose of the file.
+
+chown transfers file ownership — once root owns a file, regular users lose write access even if they created it. umask 0002 means new files default to 664 (666 minus 002), giving the owner and group write access but not others.
+
+Section 3 - User & Group Management: Created a new group (capstonegroup) and user (capstonuser), then assigned group ownership of a file. With permissions set to 640, the owner (anthony) can read and write, the group can only read, and others have no access at all. This shows how Linux uses both ownership and permissions together to control who can do what.
+
+Section 4 - SSH & Remote Access: Generated an ed25519 SSH key pair. The private key (capstone_key) has 600 permissions — only the owner can read it, and SSH enforces this. The public key (capstone_key.pub) has 644 permissions because it's meant to be shared with remote servers. SSH key authentication is more secure than passwords because the private key never leaves your machine.
+
+Section 5 - Firewalls & UFW: Configured UFW to allow ports 22 (SSH), 80 (HTTP), and 443 (HTTPS) — a standard web server setup. Demonstrated blocking port 23 (Telnet), which is unencrypted and a known security risk. UFW controls what traffic can enter the system; anything not explicitly allowed is blocked by default.
+
+Section 6 - Process Management: Used ps aux to view all running processes and grep to filter by user. Key columns are PID (process ID), %CPU, %MEM, and COMMAND. Used kill followed by the PID to terminate a process. Every process is owned by a user — this ties directly into permissions and access control.
+
+Section 7 - Log Analysis: Used tail and grep to read /var/log/auth.log. Every sudo command and login attempt is recorded with a timestamp, user, and source IP. Filtered for authentication failures and found failed SSH attempts from 192.168.33.1 on July 26. Log analysis is how security teams detect unauthorized access attempts.
+
+Section 8 - File Integrity & Hashing: Used sha256sum to generate a cryptographic hash of a file. Adding a single period to the file produced a completely different hash. This is how file integrity monitoring works — if a hash changes unexpectedly, the file has been modified. Hashing is used to verify software downloads, detect tampering, and preserve evidence in forensic investigations.
+
+Section 3 - Package Management: Used apt to update package sources and verify nginx was installed. apt handles dependencies automatically — when you install a package, it pulls in everything it needs. Config files for installed services live in /etc (nginx uses /etc/nginx/). The sites-available vs sites-enabled pattern is common in Linux — you define configs in available, then enable them by linking to enabled.
+
+Section 4 - Services & Process Management: Used systemctl to stop, start, enable, and disable nginx. Running and enabled are separate states — a service can be running but not set to start at boot, or enabled but currently stopped. The CGroup output shows nginx uses a master/worker process model where the master spawns child worker processes to handle traffic.
+
+Section 5 - Logs & Troubleshooting: Used journalctl to read nginx service logs across multiple boots. Intentionally broke the nginx config by appending invalid syntax, then used journalctl and nginx -t to diagnose the exact error (line 86, unexpected end of file). Fixed it with sed and restarted the service. Key lesson: logs tell you something failed, but nginx -t tells you exactly where and why.
+
+Section 8 - Final Failure Scenario & Recovery:
+What went wrong: nginx.conf was overwritten with invalid syntax, causing the service to fail on start.
+How I found the issue: systemctl showed the service had failed. journalctl confirmed the error. nginx -t pinpointed the exact line and directive causing the failure.
+Why I chose my fix: Since no backup config existed, I reconstructed a clean default nginx.conf manually with the correct structure and directives.
+What I would do differently in production: Always back up config files before modifying them. Use version control (git) for config files on production servers so any change can be rolled back instantly.

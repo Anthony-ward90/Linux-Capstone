@@ -1,0 +1,222 @@
+==============================================
+  CAPSTONE PROJECT NOTES — Linux Security
+==============================================
+
+----------------------------------------------
+SECTION 1 — System Orientation
+----------------------------------------------
+Key Directories:
+  /etc        = config files
+  /var/log    = system logs
+  /home       = user directories
+  /bin        = essential commands
+  /usr/bin    = user-installed commands
+
+Restricted Files:
+  /etc/shadow  640  hashed passwords, root only
+  /etc/passwd  644  user info, world-readable, no passwords
+
+----------------------------------------------
+SECTION 2 — File Permissions
+----------------------------------------------
+Common Permission Sets:
+  644  standard file (owner writes, others read)
+  600  private file (owner only)
+  755  executable (owner writes, all can run)
+  640  owner writes, group reads, others nothing
+
+umask 0002 = new files default to 664
+
+Key Commands:
+  chmod 644 file
+  chmod 600 file
+  chmod 755 file
+  ls -l
+
+----------------------------------------------
+SECTION 3 — User & Group Management
+----------------------------------------------
+- Every user gets their own default group
+- Group ownership controls team-level access
+- 640 = owner rw, group r, others none
+
+Key Commands:
+  sudo groupadd groupname
+  sudo useradd -m -G groupname username
+  groups username
+  sudo chown user:group file
+  cat /etc/passwd | tail -10
+
+----------------------------------------------
+SECTION 4 — Package Management
+----------------------------------------------
+- apt update = refresh package sources
+- apt install = install a package + its dependencies
+- Config files for services live in /etc
+- nginx pattern: sites-available (defined) vs sites-enabled (active)
+
+Key Commands:
+  sudo apt update                   refresh package list
+  sudo apt install packagename -y   install a package
+  sudo apt install --reinstall pkg  reinstall a package
+  ls /etc/nginx/                    view nginx config directory
+  systemctl status nginx            check if service is running
+
+----------------------------------------------
+SECTION 5 — Services & Process Management
+----------------------------------------------
+- Running and enabled are two separate states
+- Running = active right now
+- Enabled = will start automatically on reboot
+- Services use master/worker process model (parent/child)
+
+Key Commands:
+  sudo systemctl start nginx     start a service
+  sudo systemctl stop nginx      stop a service
+  sudo systemctl restart nginx   restart a service
+  sudo systemctl enable nginx    start at boot
+  sudo systemctl disable nginx   don't start at boot
+  systemctl status nginx         check current state
+  ps aux                         view all running processes
+  ps aux | grep username         filter by user
+  kill PID                       stop a process by ID
+
+----------------------------------------------
+SECTION 6 — Logs & Troubleshooting
+----------------------------------------------
+- journalctl reads systemd logs across all boots
+- nginx -t tests config syntax before restarting
+- logs tell you something failed, nginx -t tells you where
+
+Key Commands:
+  sudo journalctl -u nginx --no-pager   read nginx logs
+  sudo journalctl -xeu nginx.service    detailed logs with context
+  sudo nginx -t                         test nginx config syntax
+  sudo tail -20 /var/log/auth.log       read auth log
+  sudo grep -a "authentication failure" /var/log/auth.log
+
+----------------------------------------------
+SECTION 7 — System Hardening & Firewalls
+----------------------------------------------
+- UFW blocks everything by default, you allow what you need
+- Port 22 = SSH | Port 80 = HTTP | Port 443 = HTTPS | Port 23 = Telnet (block this)
+- ufw status shows all active rules
+
+Key Commands:
+  sudo ufw status              show firewall rules
+  sudo ufw allow 80/tcp        allow a port
+  sudo ufw deny 23/tcp         block a port
+  sudo ufw delete deny 23/tcp  remove a rule
+
+----------------------------------------------
+SECTION 8 — Backups & Recovery
+----------------------------------------------
+- tar creates compressed archives
+- Date-stamp filenames for versioning
+- Always verify a restore worked
+
+Key Commands:
+  tar -czvf backup_$(date +%F).tar.gz /path/to/folder   create backup
+  tar -xzvf backup.tar.gz -C ~/                          restore backup
+  ls -lh backup_*.tar.gz                                 verify backup exists
+
+Flags:
+  -c = create   -x = extract   -z = compress
+  -v = verbose  -f = filename  -C = destination
+
+----------------------------------------------
+SECTION 9 — Final Failure Scenario & Recovery
+----------------------------------------------
+Recovery process order:
+  1. systemctl status — confirm service is down
+  2. journalctl -xeu servicename — read the error
+  3. service -t (e.g. nginx -t) — pinpoint exact line
+  4. Fix the config
+  5. Verify with -t again
+  6. systemctl start — bring it back up
+
+Lessons:
+  - Always back up config files before editing them
+  - Use git for config version control on production servers
+  - nginx -t before every restart saves you from downtime
+
+----------------------------------------------
+SECTION 4 — SSH & Remote Access (Bonus)
+----------------------------------------------
+- Private key = 600 (never share)
+- Public key  = 644 (share with servers)
+- SSH refuses to use private key if permissions are too open
+- ed25519 is the modern, preferred key type
+
+Key Commands:
+  ssh-keygen -t ed25519 -C "label"
+  ls -l ~/.ssh
+
+----------------------------------------------
+CORE MUST-KNOW COMMANDS
+----------------------------------------------
+Navigation:
+  pwd                   show current directory
+  ls                    list files
+  ls -l                 list with permissions, owner, size
+  ls -la                same + hidden files
+  cd foldername         move into a folder
+  cd ..                 go back one level
+  cd ~                  go to home directory
+
+Files & Directories:
+  touch file.txt        create an empty file
+  mkdir foldername      create a folder
+  cp file.txt copy.txt  copy a file
+  mv file.txt new.txt   rename or move a file
+  rm file.txt           delete a file
+  rm -r foldername      delete a folder and everything in it
+  cat file.txt          print file contents to screen
+
+Viewing & Searching:
+  cat file.txt          show full file
+  tail -10 file.txt     show last 10 lines
+  grep "word" file.txt  search for a word in a file
+
+Permissions & Ownership:
+  chmod 644 file        set permissions
+  chown user:group file change owner and group (needs sudo)
+  umask                 show default permission mask
+
+Users & Groups:
+  whoami                show your username
+  groups username       show what groups a user belongs to
+  sudo command          run a command as root
+  sudo useradd -m -G groupname username   create a user
+  sudo groupadd groupname                 create a group
+
+System Info:
+  uname -a              show system/kernel info
+  df -h                 show disk usage
+  top                   live view of running processes (q to quit)
+
+SSH:
+  ssh-keygen -t ed25519 -C "label"   generate a key pair
+  ssh user@ipaddress                 connect to a remote server
+  ls -l ~/.ssh                       check key permissions
+
+----------------------------------------------
+CHEATSHEET REFERENCE
+----------------------------------------------
+Permission Values:
+  r = 4   w = 2   x = 1   - = 0
+
+  7 = rwx   6 = rw-   5 = r-x
+  4 = r--   3 = -wx   2 = -w-
+  1 = --x   0 = ---
+
+Format of ls -l output:
+  [type+perms] [links] [owner] [group] [size] [date] [name]
+  -rwxr-xr-x     1     anthony anthony   0    Jul 31  script.sh
+
+Positions:
+  1      = file type (- file / d dir / l symlink)
+  2-4    = owner permissions
+  5-7    = group permissions
+  8-10   = others permissions
+
