@@ -33,6 +33,8 @@ Key Commands:
   chmod 755 file
   ls -l
 
+See: Media/chmod-permission-sets.png
+
 ----------------------------------------------
 SECTION 3 — User & Group Management
 ----------------------------------------------
@@ -46,6 +48,8 @@ Key Commands:
   groups username
   sudo chown user:group file
   cat /etc/passwd | tail -10
+
+See: Media/user-group-ownership-setup.png
 
 ----------------------------------------------
 SECTION 4 — Package Management
@@ -81,6 +85,10 @@ Key Commands:
   ps aux | grep username         filter by user
   kill PID                       stop a process by ID
 
+See: Media/ps-aux-kill-process.png
+See: Media/systemctl-status-nginx-active.png
+See: Media/systemctl-start-disable-nginx.png
+
 ----------------------------------------------
 SECTION 6 — Logs & Troubleshooting
 ----------------------------------------------
@@ -95,6 +103,9 @@ Key Commands:
   sudo tail -20 /var/log/auth.log       read auth log
   sudo grep -a "authentication failure" /var/log/auth.log
 
+See: Media/grep-auth-log-failures.png
+See: Media/nginx-t-syntax-error-fix.png
+
 ----------------------------------------------
 SECTION 7 — System Hardening & Firewalls
 ----------------------------------------------
@@ -107,6 +118,9 @@ Key Commands:
   sudo ufw allow 80/tcp        allow a port
   sudo ufw deny 23/tcp         block a port
   sudo ufw delete deny 23/tcp  remove a rule
+
+See: Media/ufw-allow-rules.png
+See: Media/ufw-deny-delete-rules.png
 
 ----------------------------------------------
 SECTION 8 — Backups & Recovery
@@ -124,6 +138,9 @@ Flags:
   -c = create   -x = extract   -z = compress
   -v = verbose  -f = filename  -C = destination
 
+See: Media/sha256sum-file-integrity.png
+See: Media/backup-tar-verify.png
+
 ----------------------------------------------
 SECTION 9 — Final Failure Scenario & Recovery
 ----------------------------------------------
@@ -140,8 +157,11 @@ Lessons:
   - Use git for config version control on production servers
   - nginx -t before every restart saves you from downtime
 
+See: Media/nginx-failure-broken-config.png
+See: Media/nginx-service-recovered.png
+
 ----------------------------------------------
-SECTION 4 — SSH & Remote Access (Bonus)
+SECTION 10 — SSH & Remote Access (Bonus)
 ----------------------------------------------
 - Private key = 600 (never share)
 - Public key  = 644 (share with servers)
@@ -151,6 +171,8 @@ SECTION 4 — SSH & Remote Access (Bonus)
 Key Commands:
   ssh-keygen -t ed25519 -C "label"
   ls -l ~/.ssh
+
+See: Media/ssh-keygen-ed25519.png
 
 ----------------------------------------------
 CORE MUST-KNOW COMMANDS
